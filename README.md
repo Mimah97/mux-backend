@@ -1384,3 +1384,6 @@ Query parameters: `userId`, `network`, `status`, `includeArchived` (default `fal
 
 <!-- handsoff-issue-990 -->
 - #990: Key management e2e
+
+<!-- handsoff-issue-1077 -->
+- #1077: KeyManagementService: reject unsupported KeyType values in generateKey before key material is produced
