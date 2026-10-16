@@ -1,154 +1,105 @@
 /**
- * Supported key types for key management operations.
- * Each type maps to a specific cryptographic algorithm and provider.
+ * Key type identifiers for the custody key management module.
+ *
+ * Only `STELLAR_ED25519` is currently implemented. The remaining
+ * members are declared for forward compatibility but are NOT
+ * implemented; they are rejected at runtime by `KeyManagementService`.
  */
 export enum KeyType {
-  /** Stellar/Soroban Ed25519 keys (used for wallets) */
   STELLAR_ED25519 = 'STELLAR_ED25519',
-
-  /** Ethereum secp256k1 keys (future) */
   ETHEREUM_SECP256K1 = 'ETHEREUM_SECP256K1',
-
-  /** AWS KMS keys (future) */
   AWS_KMS = 'AWS_KMS',
-
-  /** Hardware Security Module keys (future) */
   HSM = 'HSM',
 }
 
 /**
- * Key operation types for audit logging and statistics.
+ * The set of key types that are actually implemented today.
+ *
+ * This is the machine-readable counterpart to the `(future)` markers
+ * above: any `KeyType` not present here must be rejected by callers
+ * (fail-closed) rather than silently falling through to a default
+ * branch.
  */
+export const SUPPORTED_KEY_TYPES: readonly KeyType[] = [
+  KeyType.STELLAR_ED25519,
+];
+
+/**
+ * Type guard for the currently supported key types.
+ */
+export function isSupportedKeyType(value: unknown): value is KeyType {
+  return (
+    typeof value === 'string' &&
+    (SUPPORTED_KEY_TYPES as readonly string[]).includes(value)
+  );
+}
+
 export enum KeyOperation {
-  /** Key pair generation */
   GENERATE = 'GENERATE',
-
-  /** Digital signature */
   SIGN = 'SIGN',
-
-  /** Key validation/verification */
   VALIDATE = 'VALIDATE',
-
-  /** Key rotation */
   ROTATE = 'ROTATE',
-
-  /** Key access/read */
-  ACCESS = 'ACCESS',
-
-  /** Key re-encryption */
-  RE_ENCRYPT = 'RE_ENCRYPT',
+  DECRYPT = 'DECRYPT',
 }
 
-/**
- * Result of a key generation operation.
- */
 export interface KeyGenerationResult {
-  /** The public key (safe to log and return) */
   publicKey: string;
-
-  /** The encrypted private key material */
-  encryptedData: string;
-
-  /** The key type that was generated */
+  encryptedKeyMaterial: string;
   keyType: KeyType;
-
-  /** The encryption version used */
-  encryptionVersion: number;
-
-  /** The key version (for rotation tracking) */
-  keyVersion: number;
+  version: number;
+  createdAt: string;
 }
 
-/**
- * Result of a sign operation.
- */
 export interface SignResult {
-  /** The base64-encoded signature */
   signature: string;
-
-  /** The public key that was used */
   publicKey: string;
-
-  /** The algorithm used */
   algorithm: string;
-
-  /** ISO timestamp of the operation */
   timestamp: string;
 }
 
-/**
- * Result of a validate operation.
- */
 export interface ValidateResult {
-  /** Whether the key pair is valid */
   valid: boolean;
 }
 
-/**
- * Result of a rotate operation.
- */
 export interface RotateResult {
-  /** The predecessor wallet ID */
-  predecessorWalletId: string;
-
-  /** The successor wallet ID */
-  successorWalletId: string;
-
-  /** The successor public key */
-  successorPublicKey: string;
-}
-
-/**
- * Audit log entry for key operations.
- */
-export interface KeyAuditLogEntry {
-  /** Unique ID for this audit entry */
-  id: string;
-
-  /** The operation type */
-  operation: KeyOperation;
-
-  /** The public key (safe to log) */
+  walletId: string;
   publicKey: string;
-
-  /** The key type */
+  encryptedKeyMaterial: string;
   keyType: KeyType;
-
-  /** ISO timestamp of the operation */
-  timestamp: string;
-
-  /** Whether the operation succeeded */
-  success: boolean;
-
-  /** Error message if failed (sanitized) */
-  error?: string;
-
-  /** Additional metadata */
-  metadata?: Record<string, unknown>;
-
-  /** Correlation ID from the request */
-  requestId?: string;
+  version: number;
+  rotatedAt: string;
 }
 
-/**
- * Parameters for filtering audit logs.
- */
+export interface KeyAuditLogEntry {
+  id: string;
+  operation: KeyOperation;
+  keyType: KeyType;
+  publicKey: string;
+  timestamp: string;
+  success: boolean;
+  error?: string;
+  requestId: string;
+  metadata?: Record<string, unknown>;
+}
+
+export interface AuditEntry {
+  operation: KeyOperation;
+  keyType: KeyType;
+  publicKey: string;
+  timestamp: string;
+  success: boolean;
+  error?: string;
+  requestId: string;
+  metadata?: Record<string, unknown>;
+}
+
 export interface AuditLogQueryParams {
-  /** Maximum number of entries to return */
-  limit?: number;
-
-  /** Filter by operation type */
-  operation?: KeyOperation;
-
-  /** Filter by key type */
   keyType?: KeyType;
-
-  /** Filter by success status */
+  operation?: KeyOperation;
+  publicKey?: string;
   success?: boolean;
-
-  /** Start date (ISO string) */
-  startDate?: string;
-
-  /** End date (ISO string) */
-  endDate?: string;
+  from?: string;
+  to?: string;
+  limit?: number;
+  offset?: number;
 }
