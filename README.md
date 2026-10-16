@@ -1387,3 +1387,6 @@ Query parameters: `userId`, `network`, `status`, `includeArchived` (default `fal
 
 <!-- handsoff-issue-1077 -->
 - #1077: KeyManagementService: reject unsupported KeyType values in generateKey before key material is produced
+
+<!-- handsoff-issue-1078 -->
+- #1078: KeyManagementService: add unit tests for the encrypt/decrypt failure paths and their stable error codes
